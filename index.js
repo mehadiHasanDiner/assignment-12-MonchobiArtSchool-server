@@ -59,14 +59,12 @@ async function run() {
           { $inc: { availableSeat: -1 } }
         );
 
+        const classDetails = req.body;
+        // console.log(classDetails);
+
         // save enrolled class
-        await enrolledCollection.insertOne({
-          classId: new ObjectId(classId),
-          enrollmentDate: new Date(),
-        });
-        return res
-          .status(200)
-          .send({ error: false, message: "Enrollment successful" });
+        const result = await enrolledCollection.insertOne(classDetails);
+        return res.status(200).send(result);
       } else {
         return res
           .status(400)
