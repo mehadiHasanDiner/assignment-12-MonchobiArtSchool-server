@@ -1,15 +1,15 @@
 const express = require("express");
+const app = express();
 const cors = require("cors");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
-const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());
 app.use(express.json());
 
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ehabgxd.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -43,24 +43,23 @@ async function run() {
     // enrollments database in the monchobi art class
     app.post("/enrolled/:enrolledId", async (req, res) => {
       const classId = req.params.enrolledId;
+      const query = { _id: new ObjectId(classId) };
+      const classDetails = req.body;
+      console.log(query);
+
       // find class id
-      const enrolledClass = await classesCollection.findOne({
-        _id: new ObjectId(classId),
-      });
+      const enrolledClass = await classesCollection.findOne(query);
       if (!enrolledClass) {
-        return res
-          .status(404)
-          .send({ error: true, message: "Class not found" });
+        // return res
+        //   .status(404)
+        //   .send({ error: true, message: "Class not found" });
+        res.send([]);
       }
       // check if class already exists
       if (enrolledClass.availableSeat > 0) {
-        await classesCollection.updateOne(
-          { _id: new ObjectId(classId) },
-          { $inc: { availableSeat: -1 } }
-        );
-
-        const classDetails = req.body;
-        // console.log(classDetails);
+        await classesCollection.updateOne(query, {
+          $inc: { availableSeat: -1 },
+        });
 
         // save enrolled class
         const result = await enrolledCollection.insertOne(classDetails);
@@ -70,6 +69,17 @@ async function run() {
           .status(400)
           .send({ error: true, message: "No seats available" });
       }
+    });
+
+    // get data based email id
+    app.get("/enrolled", async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        res.send([]);
+      }
+      const query = { email: email };
+      const result = await enrolledCollection.find(query).toArray();
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
