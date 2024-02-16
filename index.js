@@ -30,9 +30,9 @@ async function run() {
       .db("monchobiSchoolDB")
       .collection("classes");
 
-    const enrolledCollection = client
+    const selectedCollection = client
       .db("monchobiSchoolDB")
-      .collection("enrolled");
+      .collection("selected");
 
     // classes database
     app.get("/classes", async (req, res) => {
@@ -41,28 +41,28 @@ async function run() {
     });
 
     // enrollments database in the monchobi art class
-    app.post("/enrolled/:enrolledId", async (req, res) => {
-      const classId = req.params.enrolledId;
+    app.post("/selected/:selectedId", async (req, res) => {
+      const classId = req.params.selectedId;
       const query = { _id: new ObjectId(classId) };
       const classDetails = req.body;
       console.log(query);
 
       // find class id
-      const enrolledClass = await classesCollection.findOne(query);
-      if (!enrolledClass) {
+      const selectedClass = await classesCollection.findOne(query);
+      if (!selectedClass) {
         // return res
         //   .status(404)
         //   .send({ error: true, message: "Class not found" });
         res.send([]);
       }
       // check if class already exists
-      if (enrolledClass.availableSeat > 0) {
+      if (selectedClass.availableSeat > 0) {
         await classesCollection.updateOne(query, {
           $inc: { availableSeat: -1 },
         });
 
-        // save enrolled class
-        const result = await enrolledCollection.insertOne(classDetails);
+        // save selected class
+        const result = await selectedCollection.insertOne(classDetails);
         return res.status(200).send(result);
       } else {
         return res
@@ -72,13 +72,21 @@ async function run() {
     });
 
     // get data based email id
-    app.get("/enrolled", async (req, res) => {
+    app.get("/selected", async (req, res) => {
       const email = req.query.email;
       if (!email) {
         res.send([]);
       }
       const query = { email: email };
-      const result = await enrolledCollection.find(query).toArray();
+      const result = await selectedCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // delete data from the enrollCollection
+    app.delete("/selected/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectedCollection.deleteOne(query);
       res.send(result);
     });
 
