@@ -34,6 +34,8 @@ async function run() {
       .db("monchobiSchoolDB")
       .collection("selected");
 
+    const usersCollection = client.db("monchobiSchoolDB").collection("users");
+
     // classes database
     app.get("/classes", async (req, res) => {
       const result = await classesCollection.find().toArray();
@@ -87,6 +89,20 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // save user email and role in DB
+    app.put("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const user= req.body;
+      const query = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set:user
+      }
+      const result = await usersCollection.updateOne(query, updateDoc, options);
+      console.log(result);
       res.send(result);
     });
 
