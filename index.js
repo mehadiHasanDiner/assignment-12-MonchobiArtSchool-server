@@ -73,7 +73,7 @@ async function run() {
       }
     });
 
-    // get data based email id
+    // get data based on email id
     app.get("/selected", async (req, res) => {
       const email = req.query.email;
       if (!email) {
@@ -95,14 +95,19 @@ async function run() {
     // save user email and role in DB
     app.put("/users/:email", async (req, res) => {
       const email = req.params.email;
-      const user= req.body;
+      const user = req.body;
       const query = { email: email };
       const options = { upsert: true };
       const updateDoc = {
-        $set:user
-      }
+        $set: user,
+      };
       const result = await usersCollection.updateOne(query, updateDoc, options);
       console.log(result);
+      res.send(result);
+    });
+
+    app.get("/users", async (req, res) => {
+      const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
