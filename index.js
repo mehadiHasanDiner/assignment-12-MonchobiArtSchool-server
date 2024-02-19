@@ -92,10 +92,11 @@ async function run() {
       res.send(result);
     });
 
-    // save user email and role in DB
+    // save user email and role (admin, instructor) in DB [3 in 1, in one api call]
     app.put("/users/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
+      console.log(user);
       const query = { email: email };
       const options = { upsert: true };
       const updateDoc = {
@@ -108,19 +109,6 @@ async function run() {
 
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
-      res.send(result);
-    });
-
-    // make user role as an admin
-    app.patch("/users/admin/:id", async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const updateDoc = {
-        $set: {
-          role: "admin",
-        },
-      };
-      const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
