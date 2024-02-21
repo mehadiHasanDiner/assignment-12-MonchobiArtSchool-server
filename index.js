@@ -36,6 +36,10 @@ async function run() {
 
     const usersCollection = client.db("monchobiSchoolDB").collection("users");
 
+    const newClassesCollection = client
+      .db("monchobiSchoolDB")
+      .collection("newClasses");
+
     // classes database
     app.get("/classes", async (req, res) => {
       const result = await classesCollection.find().toArray();
@@ -103,7 +107,7 @@ async function run() {
         $set: user,
       };
       const result = await usersCollection.updateOne(query, updateDoc, options);
-      console.log(result);
+      // console.log(result);
       res.send(result);
     });
 
@@ -115,8 +119,17 @@ async function run() {
       res.send(result);
     });
 
+    // get all users data
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
+    // post new class data to the new class collection
+    app.post("/newClass", async (req, res) => {
+      const content = req.body;
+      // console.log(content);
+      const result = await newClassesCollection.insertOne(content);
       res.send(result);
     });
 
