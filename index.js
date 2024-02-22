@@ -161,7 +161,7 @@ async function run() {
     });
 
     // sending status feedback data
-    app.put("/allClasses/:id", async (req, res) => {
+    app.put("/allClasses/feedback/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const { feedback } = req.body;
