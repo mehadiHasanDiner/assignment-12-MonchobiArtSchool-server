@@ -100,7 +100,7 @@ async function run() {
     app.put("/users/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
-      console.log(user);
+      // console.log(user);
       const query = { email: email };
       const options = { upsert: true };
       const updateDoc = {
@@ -128,7 +128,6 @@ async function run() {
     // post new class data to the new class collection
     app.post("/newClass", async (req, res) => {
       const content = req.body;
-      // console.log(content);
       const result = await newClassesCollection.insertOne(content);
       res.send(result);
     });
@@ -136,6 +135,17 @@ async function run() {
     // get all classes data posted by instructor
     app.get("/allClasses", async (req, res) => {
       const result = await newClassesCollection.find().toArray();
+      res.send(result);
+    });
+
+    // get posted class data based on email address
+    app.get("/allClasses/:email", async (req, res) => {
+      const email = req.params.email;
+      if (!email) {
+        res.send([]);
+      }
+      const query = { email: email };
+      const result = await newClassesCollection.find(query).toArray();
       res.send(result);
     });
 
