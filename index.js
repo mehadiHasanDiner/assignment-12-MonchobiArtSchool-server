@@ -149,6 +149,28 @@ async function run() {
       res.send(result);
     });
 
+    // update pending, approved, denied status data
+    app.put("/allClasses/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const { status } = req.body;
+      const result = await await newClassesCollection.updateOne(query, {
+        $set: { status },
+      });
+      res.send(result);
+    });
+
+    // sending status feedback data
+    app.put("/allClasses/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const { feedback } = req.body;
+      const result = await await newClassesCollection.updateOne(query, {
+        $set: { feedback },
+      });
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
