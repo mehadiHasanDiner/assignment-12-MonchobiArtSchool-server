@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const port = process.env.PORT || 5000;
@@ -8,6 +9,27 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(cors());
 app.use(express.json());
+
+// verification jwt token
+const verifyJWT = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res
+      .status(401)
+      .send({ error: true, message: "unauthorized access" });
+  }
+  // bearer  token
+  const token = authorization.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res
+        .status(401)
+        .send({ error: true, message: "unauthorized access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ehabgxd.mongodb.net/?retryWrites=true&w=majority`;
@@ -39,6 +61,15 @@ async function run() {
     const newClassesCollection = client
       .db("monchobiSchoolDB")
       .collection("newClasses");
+
+    // post created jwt token
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+      res.send({ token });
+    });
 
     // classes database
     app.get("/classes", async (req, res) => {
@@ -78,11 +109,19 @@ async function run() {
     });
 
     // get data based on email id
-    app.get("/selected", async (req, res) => {
+    app.get("/selected", verifyJWT, async (req, res) => {
       const email = req.query.email;
       if (!email) {
         res.send([]);
       }
+
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res
+          .status(400)
+          .send({ error: true, message: "forbidden access" });
+      }
+
       const query = { email: email };
       const result = await selectedCollection.find(query).toArray();
       res.send(result);
@@ -114,6 +153,7 @@ async function run() {
     // get user and his role
     app.get("/users/:email", async (req, res) => {
       const email = req.params.email;
+
       const query = { email: email };
       const result = await usersCollection.findOne(query);
       res.send(result);
