@@ -151,7 +151,7 @@ async function run() {
     });
 
     // get user and his role
-    app.get("/users/:email", async (req, res) => {
+    app.get("/users/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
 
       const query = { email: email };
@@ -160,7 +160,7 @@ async function run() {
     });
 
     // get all users data
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyJWT, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -173,7 +173,7 @@ async function run() {
     });
 
     // get all classes data posted by instructor
-    app.get("/allClasses", async (req, res) => {
+    app.get("/allClasses", verifyJWT, async (req, res) => {
       const result = await newClassesCollection.find().toArray();
       res.send(result);
     });
