@@ -191,7 +191,7 @@ async function run() {
     });
 
     // get posted class data based on email address
-    app.get("/allClasses/:email", verifyJWT, verifyAdmin, async (req, res) => {
+    app.get("/allClasses/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       if (!email) {
         res.send([]);
