@@ -48,6 +48,18 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const users = await usersCollection.findOne(query);
+      if (users?.role !== "admin") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden message" });
+      }
+      next();
+    };
+
     const classesCollection = client
       .db("monchobiSchoolDB")
       .collection("classes");
@@ -166,20 +178,20 @@ async function run() {
     });
 
     // post new class data to the new class collection
-    app.post("/newClass", async (req, res) => {
+    app.post("/newClass", verifyJWT, async (req, res) => {
       const content = req.body;
       const result = await newClassesCollection.insertOne(content);
       res.send(result);
     });
 
     // get all classes data posted by instructor
-    app.get("/allClasses", verifyJWT, async (req, res) => {
+    app.get("/allClasses", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await newClassesCollection.find().toArray();
       res.send(result);
     });
 
     // get posted class data based on email address
-    app.get("/allClasses/:email", verifyJWT, async (req, res) => {
+    app.get("/allClasses/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const email = req.params.email;
       if (!email) {
         res.send([]);
