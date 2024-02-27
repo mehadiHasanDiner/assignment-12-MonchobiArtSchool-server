@@ -109,18 +109,18 @@ async function run() {
     });
 
     // get data based on email id
-    app.get("/selected", verifyJWT, async (req, res) => {
+    app.get("/selected", async (req, res) => {
       const email = req.query.email;
       if (!email) {
         res.send([]);
       }
-
-      const decodedEmail = req.decoded.email;
-      if (email !== decodedEmail) {
-        return res
-          .status(400)
-          .send({ error: true, message: "forbidden access" });
-      }
+      // [for accessing classes route every time that's why it is opened]
+      // const decodedEmail = req.decoded.email;
+      // if (email !== decodedEmail) {
+      //   return res
+      //     .status(400)
+      //     .send({ error: true, message: "forbidden access" });
+      // }
 
       const query = { email: email };
       const result = await selectedCollection.find(query).toArray();
