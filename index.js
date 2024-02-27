@@ -179,10 +179,16 @@ async function run() {
     });
 
     // get posted class data based on email address
-    app.get("/allClasses/:email", async (req, res) => {
+    app.get("/allClasses/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       if (!email) {
         res.send([]);
+      }
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res
+          .status(400)
+          .send({ error: true, message: "forbidden access" });
       }
       const query = { email: email };
       const result = await newClassesCollection.find(query).toArray();
