@@ -60,6 +60,18 @@ async function run() {
       next();
     };
 
+    const verifyInstructor = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const users = await usersCollection.findOne(query);
+      if (users?.role !== "instructor") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden message" });
+      }
+      next();
+    };
+
     const classesCollection = client
       .db("monchobiSchoolDB")
       .collection("classes");
@@ -178,7 +190,7 @@ async function run() {
     });
 
     // post new class data to the new class collection
-    app.post("/newClass", verifyJWT, async (req, res) => {
+    app.post("/newClass", verifyJWT, verifyInstructor, async (req, res) => {
       const content = req.body;
       const result = await newClassesCollection.insertOne(content);
       res.send(result);
