@@ -3,6 +3,7 @@ const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 
 const port = process.env.PORT || 5000;
 
@@ -85,6 +86,10 @@ async function run() {
     const newClassesCollection = client
       .db("monchobiSchoolDB")
       .collection("newClasses");
+
+    const paymentsCollection = client
+      .db("monchobiSchoolDB")
+      .collection("payments");
 
     // post created jwt token
     app.post("/jwt", (req, res) => {
@@ -239,6 +244,38 @@ async function run() {
         $set: { feedback },
       });
       res.send(result);
+    });
+
+    // payment integration: create payment intent
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { feeAmount } = req.body;
+      const amount = feeAmount * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "USD",
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    // payment related api calls
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentsCollection.insertOne(payment);
+
+      // const query = {
+      //   _id: { $in: payment.selectId.map((id) => new ObjectId(id)) },
+      // };
+      // _id: { $in: Array.isArray(payment.selectId) ? payment.selectId.map(id => new ObjectId(id)) : [] },
+
+      const query = {
+        _id: new ObjectId(payment.selectId),
+      };
+
+      const deleteResult = await selectedCollection.deleteOne(query);
+      res.send({ result: insertResult, deleteResult });
     });
 
     // Send a ping to confirm a successful connection
