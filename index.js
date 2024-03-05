@@ -143,7 +143,7 @@ async function run() {
       if (!email) {
         res.send([]);
       }
-      // [for accessing classes route every time that's why it is opened]
+      // [for accessing classes route every time that's why it is open]
       // const decodedEmail = req.decoded.email;
       // if (email !== decodedEmail) {
       //   return res
@@ -276,6 +276,18 @@ async function run() {
 
       const deleteResult = await selectedCollection.deleteOne(query);
       res.send({ result: insertResult, deleteResult });
+    });
+
+    // get enrollment information
+    app.get("/enrollment/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (!email) {
+        res.send([]);
+      }
+
+      const query = { email: email };
+      const result = await paymentsCollection.find(query).toArray();
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
