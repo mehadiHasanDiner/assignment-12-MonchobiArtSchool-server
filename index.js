@@ -168,6 +168,7 @@ async function run() {
     app.put("/users/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
+      user.createAt = new Date();
       // console.log(user);
       const query = { email: email };
       const options = { upsert: true };
@@ -190,20 +191,27 @@ async function run() {
 
     // get all users data
     app.get("/users", verifyJWT, async (req, res) => {
-      const result = await usersCollection.find().toArray();
+      const result = await usersCollection
+        .find()
+        .sort({ createAt: -1 })
+        .toArray();
       res.send(result);
     });
 
     // post new class data to the new class collection
     app.post("/newClass", verifyJWT, verifyInstructor, async (req, res) => {
       const content = req.body;
+      content.createAt = new Date();
       const result = await newClassesCollection.insertOne(content);
       res.send(result);
     });
 
     // get all classes data posted by instructor
     app.get("/allClasses", verifyJWT, verifyAdmin, async (req, res) => {
-      const result = await newClassesCollection.find().toArray();
+      const result = await newClassesCollection
+        .find()
+        .sort({ createAt: -1 })
+        .toArray();
       res.send(result);
     });
 
@@ -223,6 +231,15 @@ async function run() {
       const result = await newClassesCollection.find(query).toArray();
       res.send(result);
     });
+
+    // get all approved class
+    // app.get("/allClasses/approved", async (req, res) => {
+    //   const result = await newClassesCollection
+    //     .find({ status: "Approved" })
+    //     .sort({ createAt: -1 })
+    //     .toArray();
+    //   res.send(result);
+    // });
 
     // update pending, approved, denied status data
     app.put("/allClasses/:id", async (req, res) => {
