@@ -246,7 +246,7 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const { status } = req.body;
-      const result = await await newClassesCollection.updateOne(query, {
+      const result = await newClassesCollection.updateOne(query, {
         $set: { status },
       });
       res.send(result);
@@ -257,7 +257,7 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const { feedback } = req.body;
-      const result = await await newClassesCollection.updateOne(query, {
+      const result = await newClassesCollection.updateOne(query, {
         $set: { feedback },
       });
       res.send(result);
