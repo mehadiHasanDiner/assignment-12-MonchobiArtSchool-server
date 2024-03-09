@@ -91,6 +91,14 @@ async function run() {
       .db("monchobiSchoolDB")
       .collection("payments");
 
+    const approvedClassCollection = client
+      .db("monchobiSchoolDB")
+      .collection("approvedClass");
+
+    const deniedClassCollection = client
+      .db("monchobiSchoolDB")
+      .collection("deniedClass");
+
     // post created jwt token
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -114,7 +122,7 @@ async function run() {
       console.log(query);
 
       // find class id
-      const selectedClass = await classesCollection.findOne(query);
+      const selectedClass = await approvedClassCollection.findOne(query);
       if (!selectedClass) {
         // return res
         //   .status(404)
@@ -123,7 +131,7 @@ async function run() {
       }
       // check if class already exists
       if (selectedClass.availableSeat > 0) {
-        await classesCollection.updateOne(query, {
+        await approvedClassCollection.updateOne(query, {
           $inc: { availableSeat: -1 },
         });
 
@@ -168,7 +176,7 @@ async function run() {
     app.put("/users/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
-      user.createAt = new Date();
+      // user.createAt = new Date();
       // console.log(user);
       const query = { email: email };
       const options = { upsert: true };
@@ -191,10 +199,8 @@ async function run() {
 
     // get all users data
     app.get("/users", verifyJWT, async (req, res) => {
-      const result = await usersCollection
-        .find()
-        .sort({ createAt: -1 })
-        .toArray();
+      const result = await usersCollection.find().toArray();
+      // .sort({ createAt: -1 })
       res.send(result);
     });
 
@@ -203,7 +209,8 @@ async function run() {
       const content = req.body;
       content.createAt = new Date();
       const result = await newClassesCollection.insertOne(content);
-      res.send(result);
+      console.log(result);
+      // res.send(result);
     });
 
     // get all classes data posted by instructor
@@ -232,23 +239,34 @@ async function run() {
       res.send(result);
     });
 
-    // get all approved class
-    // app.get("/allClasses/approved", async (req, res) => {
-    //   const result = await newClassesCollection
-    //     .find({ status: "Approved" })
-    //     .sort({ createAt: -1 })
-    //     .toArray();
-    //   res.send(result);
-    // });
-
     // update pending, approved, denied status data
     app.put("/allClasses/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const { status } = req.body;
-      const result = await newClassesCollection.updateOne(query, {
+
+      const updatedResult = await newClassesCollection.updateOne(query, {
         $set: { status },
       });
+
+      if (updatedResult.modifiedCount === 1) {
+        if (status === "Approved") {
+          const updatedData = await newClassesCollection.findOne(query);
+          await approvedClassCollection.insertOne(updatedData);
+        } else if (status === "Denied") {
+          const updatedData = await newClassesCollection.findOne(query);
+          await deniedClassCollection.insertOne(updatedData);
+        }
+      }
+      res.send(updatedResult);
+    });
+
+    // get all approved class
+    app.get("/approvedClass", async (req, res) => {
+      const result = await approvedClassCollection
+        .find()
+        .sort({ createAt: -1 })
+        .toArray();
       res.send(result);
     });
 
