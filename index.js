@@ -209,8 +209,8 @@ async function run() {
       const content = req.body;
       content.createAt = new Date();
       const result = await newClassesCollection.insertOne(content);
-      console.log(result);
-      // res.send(result);
+      // console.log(result);
+      res.send(result);
     });
 
     // get all classes data posted by instructor
